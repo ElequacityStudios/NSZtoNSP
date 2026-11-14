@@ -1,0 +1,15 @@
+# Xcode
+.DS_Store
+*.xcuserstate
+xcuserdata/
+DerivedData/
+build/
+*.xcodeproj/project.xcworkspace/
+
+# Local XcodeGen output
+NSZtoNSP.xcodeproj/
+Package.resolved
+
+# Distribution output
+*.ipa
+*.xcarchive

@@ -1,0 +1,57 @@
+name: NSZtoNSP
+options:
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+packages:
+  SwiftZSTD:
+    url: https://github.com/AutisticAF/SwiftZSTD.git
+    revision: 0e8acc3a4d264b347a46362af5325d292278b8f3
+targets:
+  NSZtoNSP:
+    type: application
+    platform: iOS
+    sources:
+      - Sources/NSZtoNSPApp
+    dependencies:
+      - package: SwiftZSTD
+        product: SwiftZSTD
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.elequacitystudios.nsztonsp
+        INFOPLIST_FILE: Config/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        SWIFT_VERSION: "5.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        SUPPORTS_MACCATALYST: NO
+        MARKETING_VERSION: "1.0.0"
+        CURRENT_PROJECT_VERSION: "1"
+        ENABLE_PREVIEWS: YES
+  NSZtoNSPTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/NSZtoNSPTests
+    dependencies:
+      - target: NSZtoNSP
+      - package: SwiftZSTD
+        product: SwiftZSTD
+    settings:
+      base:
+        IPHONEOS_DEPLOYMENT_TARGET: "16.0"
+        SWIFT_VERSION: "5.0"
+schemes:
+  NSZtoNSP:
+    build:
+      targets:
+        NSZtoNSP: all
+        NSZtoNSPTests: [test]
+    test:
+      config: Debug
+      targets:
+        - NSZtoNSPTests
+    run:
+      config: Debug
+    archive:
+      config: Release

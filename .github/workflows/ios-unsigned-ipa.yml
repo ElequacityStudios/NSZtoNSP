@@ -1,0 +1,60 @@
+name: iOS build and unsigned IPA
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate --spec project.yml
+
+      - name: Resolve Swift packages
+        run: xcodebuild -resolvePackageDependencies -project NSZtoNSP.xcodeproj -scheme NSZtoNSP
+
+      - name: Run iOS simulator tests
+        run: |
+          device_id="$(xcrun simctl list devices available --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(next(x["udid"] for group in d["devices"].values() for x in group if x.get("isAvailable") and x["name"].startswith("iPhone")))')"
+          xcodebuild test \
+            -project NSZtoNSP.xcodeproj \
+            -scheme NSZtoNSP \
+            -destination "platform=iOS Simulator,id=$device_id" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Build unsigned iOS app
+        run: |
+          xcodebuild build \
+            -project NSZtoNSP.xcodeproj \
+            -scheme NSZtoNSP \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+          app_path="build/DerivedData/Build/Products/Release-iphoneos/NSZtoNSP.app"
+          test -d "$app_path"
+          mkdir -p build/unsigned/Payload
+          ditto "$app_path" build/unsigned/Payload/NSZtoNSP.app
+          (cd build/unsigned && ditto -c -k --sequesterRsrc --keepParent Payload "$GITHUB_WORKSPACE/NSZtoNSP-unsigned.ipa")
+          unzip -l NSZtoNSP-unsigned.ipa
+
+      - name: Upload unsigned IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: NSZtoNSP-unsigned-IPA
+          path: NSZtoNSP-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30
