@@ -90,8 +90,11 @@ private func readUInt32LE(_ handle: FileHandle) throws -> UInt32 {
 
 private func readUInt64LE(_ handle: FileHandle) throws -> UInt64 {
     let b = try readExactly(handle, count: 8)
-    return UInt64(b[0]) | (UInt64(b[1]) << 8) | (UInt64(b[2]) << 16) | (UInt64(b[3]) << 24) |
-        (UInt64(b[4]) << 32) | (UInt64(b[5]) << 40) | (UInt64(b[6]) << 48) | (UInt64(b[7]) << 56)
+    var value: UInt64 = 0
+    for index in 0..<8 {
+        value |= UInt64(b[index]) << (index * 8)
+    }
+    return value
 }
 
 private func appendLE<T: FixedWidthInteger>(_ value: T, to data: inout Data) {
@@ -382,7 +385,7 @@ final class AESCTRTransform {
     }
 
     func transform(_ input: Data) throws -> Data {
-        guard let cryptor else { throw NSZConversionError.cryptography(kCCParamError) }
+        guard let cryptor else { throw NSZConversionError.cryptography(Int32(kCCParamError)) }
         var output = Data(count: input.count)
         var moved = 0
         let status = input.withUnsafeBytes { source in
