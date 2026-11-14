@@ -386,14 +386,15 @@ final class AESCTRTransform {
 
     func transform(_ input: Data) throws -> Data {
         guard let cryptor else { throw NSZConversionError.cryptography(Int32(kCCParamError)) }
-        var output = Data(count: input.count)
+        let outputCapacity = input.count
+        var output = Data(count: outputCapacity)
         var moved = 0
         let status = input.withUnsafeBytes { source in
             output.withUnsafeMutableBytes { destination in
-                CCCryptorUpdate(cryptor, source.baseAddress, input.count, destination.baseAddress, output.count, &moved)
+                CCCryptorUpdate(cryptor, source.baseAddress, input.count, destination.baseAddress, outputCapacity, &moved)
             }
         }
-        guard status == kCCSuccess, moved == output.count else { throw NSZConversionError.cryptography(status) }
+        guard status == kCCSuccess, moved == outputCapacity else { throw NSZConversionError.cryptography(status) }
         return output
     }
 }
